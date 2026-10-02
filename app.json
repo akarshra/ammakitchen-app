@@ -1,25 +1,38 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Amma Kitchen Salem",
+    "slug": "amma-kitchen-salem",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "scheme": "ammakitchen",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#FAF6F0",
+    "splash": {
+      "backgroundColor": "#FAF6F0"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ammakitchen.salem"
     },
     "android": {
+      "package": "com.ammakitchen.salem",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#FAF6F0"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "bundler": "metro",
+      "output": "static",
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-video"
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amma Kitchen Salem - CRM & Kitchen Console</title>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Socket.io -->
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="crm.css">
+</head>
+<body class="light-theme">
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-circle">
+          <i data-lucide="utensils-cross"></i>
+        </div>
+        <div class="logo-text">
+          <h2>Amma Kitchen</h2>
+          <p>Salem Console</p>
+        </div>
+      </div>
+      
+      <nav class="sidebar-menu">
+        <button class="nav-btn active" data-tab="orders">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Live Orders</span>
+          <span class="badge" id="incoming-count">0</span>
+        </button>
+        <button class="nav-btn" data-tab="menu">
+          <i data-lucide="menu"></i>
+          <span>Menu Manager</span>
+        </button>
+        <button class="nav-btn" data-tab="coupons">
+          <i data-lucide="ticket"></i>
+          <span>Promo Coupons</span>
+        </button>
+        <button class="nav-btn" data-tab="customers">
+          <i data-lucide="users"></i>
+          <span>Customers</span>
+        </button>
+        <button class="nav-btn" data-tab="analytics">
+          <i data-lucide="trending-up"></i>
+          <span>Analytics</span>
+        </button>
+        <button class="nav-btn" data-tab="seniors">
+          <i data-lucide="heart"></i>
+          <span>Senior Care</span>
+        </button>
+        
+        <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 15px 0;"></div>
+        
+        <a href="http://localhost:8081" class="back-to-app-btn">
+          <i data-lucide="smartphone"></i>
+          <span>Back to App</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="chef-profile">
+          <img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=150&q=80" alt="Chef Ganesh">
+          <div class="profile-text">
+            <h4>Ganesh Ram</h4>
+            <p>Master Chef</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="header-left">
+          <h1 id="tab-title">Live Orders Board</h1>
+          <p id="tab-subtitle">Real-time order tracking and dispatch console</p>
+        </div>
+        <div class="header-right">
+          <div class="live-indicator">
+            <span class="pulse-dot"></span>
+            <span>Live Server Connected</span>
+          </div>
+          <button class="btn-theme-toggle" onclick="toggleThemeScheme()" id="theme-toggle-btn" title="Toggle Theme">
+            <i data-lucide="sun" id="theme-toggle-icon" style="width: 16px; height: 16px;"></i>
+          </button>
+          <button class="action-btn-primary" onclick="window.location.reload()">
+            <i data-lucide="refresh-cw"></i>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Views -->
+      <div class="content-body">
+        
+        <!-- Tab 1: Live Orders Board -->
+        <section class="tab-view active" id="view-orders">
+          <!-- Stats Strip -->
+          <div class="stats-grid-mini">
+            <div class="stat-card-mini">
+              <div class="stat-icon-circle blue">
+                <i data-lucide="inbox"></i>
+              </div>
+              <div class="stat-text">
+                <h3 id="stat-received">0</h3>
+                <p>New Received</p>
+              </div>
+            </div>
+            <div class="stat-card-mini">
+              <div class="stat-icon-circle yellow">
+                <i data-lucide="flame"></i>
+              </div>
+              <div class="stat-text">
+                <h3 id="stat-preparing">0</h3>
+                <p>Cooking Now</p>
+              </div>
+            </div>
+            <div class="stat-card-mini">
+              <div class="stat-icon-circle orange">
+                <i data-lucide="truck"></i>
+              </div>
+              <div class="stat-text">
+                <h3 id="stat-dispatched">0</h3>
+                <p>On Scooter</p>
+              </div>
+            </div>
+            <div class="stat-card-mini">
+              <div class="stat-icon-circle green">
+                <i data-lucide="check-circle-2"></i>
+              </div>
+              <div class="stat-text">
+                <h3 id="stat-delivered">0</h3>
+                <p>Completed Today</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kanban Grid -->
+          <div class="kanban-grid">
+            <!-- Column 1: Received -->
+            <div class="kanban-column" id="col-received">
+              <div class="column-header">
+                <h3>Incoming Orders</h3>
+                <span class="column-count" id="count-received">0</span>
+              </div>
+              <div class="column-cards" id="cards-received"></div>
+            </div>
+
+            <!-- Column 2: Preparing -->
+            <div class="kanban-column" id="col-preparing">
+              <div class="column-header">
+                <h3>Preparing / Cooking</h3>
+                <span class="column-count" id="count-preparing">0</span>
+              </div>
+              <div class="column-cards" id="cards-preparing"></div>
+            </div>
+
+            <!-- Column 3: Out for Delivery -->
+            <div class="kanban-column" id="col-delivery">
+              <div class="column-header">
+                <h3>Out for Delivery</h3>
+                <span class="column-count" id="count-delivery">0</span>
+              </div>
+              <div class="column-cards" id="cards-delivery"></div>
+            </div>
+
+            <!-- Column 4: Delivered -->
+            <div class="kanban-column" id="col-delivered">
+              <div class="column-header">
+                <h3>Delivered / Completed</h3>
+                <span class="column-count" id="count-delivered">0</span>
+              </div>
+              <div class="column-cards" id="cards-delivered"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 2: Menu Manager -->
+        <section class="tab-view" id="view-menu">
+          <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <div>
+                <h2>Kitchen Menu Controller</h2>
+                <p>Disable sold-out dishes or update prices instantly.</p>
+              </div>
+              <button class="action-btn-primary" onclick="openAddMenuModal()">
+                <i data-lucide="plus"></i>
+                <span>Add New Dish</span>
+              </button>
+            </div>
+            <div class="table-container">
+              <table class="menu-table">
+                <thead>
+                  <tr>
+                    <th>Dish Details</th>
+                    <th>Category</th>
+                    <th>Base Price (₹)</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="menu-items-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 3: Customers -->
+        <section class="tab-view" id="view-customers">
+          <div class="card">
+            <div class="card-header">
+              <h2>Registered Customers</h2>
+              <p>Salem customer profiles, contacts, and delivery addresses.</p>
+            </div>
+            <div class="table-container">
+              <table class="menu-table">
+                <thead>
+                  <tr>
+                    <th>Customer Name</th>
+                    <th>Contact Phone</th>
+                    <th>Email Address</th>
+                    <th>Loyalty Points</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="customers-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 5: Senior Care Registry -->
+        <section class="tab-view" id="view-seniors">
+          <div class="card">
+            <div class="card-header">
+              <h2>Senior Citizen Registry</h2>
+              <p>Monitored parent profiles in Salem with low-salt/diabetic parameters and rider instructions.</p>
+            </div>
+            <div class="table-container">
+              <table class="menu-table">
+                <thead>
+                  <tr>
+                    <th>Senior Name</th>
+                    <th>Sponsor Customer</th>
+                    <th>Contact Phone</th>
+                    <th>Delivery Address</th>
+                    <th>Dietary Restriction Alert</th>
+                    <th>Rider Guideline</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="seniors-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 6: Coupons Manager -->
+        <section class="tab-view" id="view-coupons">
+          <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <div>
+                <h2>Promo Coupons Controller</h2>
+                <p>View, create, and toggle active discount codes.</p>
+              </div>
+              <button class="action-btn-primary" onclick="openAddCouponModal()">
+                <i data-lucide="plus"></i>
+                <span>New Coupon</span>
+              </button>
+            </div>
+            <div class="table-container">
+              <table class="menu-table">
+                <thead>
+                  <tr>
+                    <th>Coupon Code</th>
+                    <th>Discount Value</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="coupons-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 4: Analytics -->
+        <section class="tab-view" id="view-analytics">
+          <div class="analytics-hero">
+            <div class="hero-stat-card">
+              <i data-lucide="indian-rupee" class="hero-icon blue"></i>
+              <div class="hero-stat-text">
+                <h2 id="analytics-revenue">₹0.00</h2>
+                <p>Total Revenue Today</p>
+              </div>
+            </div>
+            <div class="hero-stat-card">
+              <i data-lucide="shopping-bag" class="hero-icon purple"></i>
+              <div class="hero-stat-text">
+                <h2 id="analytics-orders">0</h2>
+                <p>Total Placed Orders</p>
+              </div>
+            </div>
+            <div class="hero-stat-card">
+              <i data-lucide="pie-chart" class="hero-icon green"></i>
+              <div class="hero-stat-text">
+                <h2 id="analytics-aov">₹0.00</h2>
+                <p>Average Order Value</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Popular Categories</h2>
+              <p>Sales breakdown of categories today</p>
+            </div>
+            <div class="category-breakdown" id="category-analytics-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+  
+  <!-- Modal: Add/Edit Menu Item -->
+  <div class="modal-overlay" id="modal-menu">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-menu-title">Add New Dish</h3>
+        <button class="modal-close-btn" onclick="closeMenuModal()"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="menu-item-id">
+      <div class="form-group">
+        <label for="menu-name">Dish Name *</label>
+        <input type="text" id="menu-name" class="form-control" placeholder="e.g. Traditional Sambar Idli">
+      </div>
+      <div class="form-group">
+        <label for="menu-subtitle">Subtitle (Short Tagline)</label>
+        <input type="text" id="menu-subtitle" class="form-control" placeholder="e.g. Steamed Rice Cakes with Lentil Chowder">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="menu-price">Price (₹) *</label>
+          <input type="number" id="menu-price" class="form-control" placeholder="e.g. 70">
+        </div>
+        <div class="form-group">
+          <label for="menu-original-price">Original Price</label>
+          <input type="number" id="menu-original-price" class="form-control" placeholder="e.g. 90">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="menu-category">Category *</label>
+        <input type="text" id="menu-category" class="form-control" placeholder="e.g. Traditional Specials">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="menu-prep-time">Prep Time</label>
+          <input type="text" id="menu-prep-time" class="form-control" placeholder="e.g. 10 mins">
+        </div>
+        <div class="form-group">
+          <label for="menu-serving-size">Serving Size</label>
+          <input type="text" id="menu-serving-size" class="form-control" placeholder="e.g. Serves 1-2">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="menu-calories">Calories</label>
+          <input type="text" id="menu-calories" class="form-control" placeholder="e.g. 280 kcal">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-top: 24px;">
+          <label class="form-checkbox">
+            <input type="checkbox" id="menu-is-veg" checked>
+            <span>Is Vegetarian</span>
+          </label>
+          <label class="form-checkbox">
+            <input type="checkbox" id="menu-is-popular">
+            <span>Is Popular</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="menu-description">Short Description</label>
+        <textarea id="menu-description" class="form-control" rows="2" placeholder="Fresh homestyle cooked..."></textarea>
+      </div>
+      <div class="form-group">
+        <label for="menu-long-description">Detailed Story / Ingredients</label>
+        <textarea id="menu-long-description" class="form-control" rows="3" placeholder="A detailed recipe history..."></textarea>
+      </div>
+      <div class="form-group">
+        <label for="menu-image">Image URL</label>
+        <input type="text" id="menu-image" class="form-control" placeholder="https://images.unsplash.com/...">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeMenuModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveMenuItem()">Save Dish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Promo Coupon -->
+  <div class="modal-overlay" id="modal-coupon">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create Discount Coupon</h3>
+        <button class="modal-close-btn" onclick="closeCouponModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="form-group">
+        <label for="coupon-code">Coupon Code (CAPITALS) *</label>
+        <input type="text" id="coupon-code" class="form-control" placeholder="e.g. DIWALI30" style="text-transform: uppercase;">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="coupon-value">Discount Value *</label>
+          <input type="number" id="coupon-value" class="form-control" placeholder="e.g. 50">
+        </div>
+        <div class="form-group">
+          <label for="coupon-type">Discount Type</label>
+          <select id="coupon-type" class="form-control">
+            <option value="fixed">Flat Cash Off (₹)</option>
+            <option value="percent">Percentage (%)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeCouponModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveCouponCode()">Create Coupon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Broadcast WhatsApp Alert -->
+  <div class="modal-overlay" id="modal-broadcast">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Broadcaster Notification Hub</h3>
+        <button class="modal-close-btn" onclick="closeBroadcastModal()"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="broadcast-phone">
+      <input type="hidden" id="broadcast-name">
+      <div class="form-group">
+        <label>Recipient Customer</label>
+        <input type="text" id="broadcast-recipient-display" class="form-control" readonly style="background-color: rgba(255,255,255,0.05);">
+      </div>
+      <div class="form-group">
+        <label for="broadcast-template">Message Template</label>
+        <select id="broadcast-template" class="form-control" onchange="applyBroadcastTemplate(this.value)">
+          <option value="custom">-- Custom Message --</option>
+          <option value="dispatched">Delivery Alert: "Your homestyle meals are prepared by Amma's Kitchen and handed to our rider. Track live on app!"</option>
+          <option value="dietary">Dietary Confirmation: "Greetings from Amma's Kitchen. We have custom-prepared your parent's meal with low salt and soft chew parameters as requested. Delivering shortly."</option>
+          <option value="loyalty">Loyalty Rewards Gift: "Congratulations! We have credited 50 loyalty points to your Amma's Kitchen wallet as a token of our appreciation. Enjoy free homestyle meals!"</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="broadcast-message">Notification Message Body</label>
+        <textarea id="broadcast-message" class="form-control" rows="4" placeholder="Type notification message here..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeBroadcastModal()">Cancel</button>
+        <button class="btn-primary" onclick="sendAlertBroadcast()">Broadcast Alert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Senior Citizen Care Guidelines -->
+  <div class="modal-overlay" id="modal-diet">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Elder Care Dietary Guidelines</h3>
+        <button class="modal-close-btn" onclick="closeDietModal()"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="diet-elder-id">
+      <div class="form-group">
+        <label>Elderly Patient Name</label>
+        <input type="text" id="diet-elder-name" class="form-control" readonly style="font-weight: 700; background-color: rgba(255,255,255,0.05);">
+      </div>
+      <div class="form-group">
+        <label for="diet-restriction">Dietary Restriction Parameters</label>
+        <select id="diet-restriction" class="form-control">
+          <option value="none">None (Regular spices & items)</option>
+          <option value="low-salt">Low Salt & Mild Spicing</option>
+          <option value="diabetic-friendly">Diabetic Friendly (No sugar / White rice swap)</option>
+          <option value="soft-chew">Soft Easy Chew texture (pureed or slow cooked)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="diet-notes">Rider Instructions / Delivery Guidelines</label>
+        <textarea id="diet-notes" class="form-control" rows="3" placeholder="e.g. Ring bell twice, deliver strictly to elderly hand"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeDietModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveElderDietary()">Update Guidelines</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="crm.js"></script>
+</body>
+</html>
